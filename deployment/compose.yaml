@@ -1,0 +1,78 @@
+services:
+  bot-cbp:
+    container_name: bot-cbp
+    build:
+      context: ../
+      dockerfile: ./src/Dockerfile
+    restart: always
+    ports: 
+    - "3012:3012"
+    networks:
+      - postgres-cbp
+    env_file:
+      - app.env
+
+  db-cbp:
+    container_name: db-cbp
+    hostname: db-cbp
+    image: postgres:14.8-alpine3.18
+    command:
+      - "postgres"
+      - "-c"
+      - "max_connections=50"
+      - "-c"
+      - "shared_buffers=1GB"
+      - "-c"
+      - "effective_cache_size=4GB"
+      - "-c"
+      - "work_mem=16MB"
+      - "-c"
+      - "maintenance_work_mem=512MB"
+      - "-c"
+      - "random_page_cost=1.1"
+      - "-c"
+      - "temp_file_limit=10GB"
+      - "-c"
+      - "log_min_duration_statement=200ms"
+      - "-c"
+      - "idle_in_transaction_session_timeout=10s"
+      - "-c"
+      - "lock_timeout=1s"
+      - "-c"
+      - "statement_timeout=60s"
+      - "-c"
+      - "shared_preload_libraries=pg_stat_statements"
+      - "-c"
+      - "pg_stat_statements.max=10000"
+      - "-c"
+      - "pg_stat_statements.track=all"
+    env_file:
+      - postgres.env
+    volumes:
+      - ./db-data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 4G
+    networks:
+      - postgres-cbp
+
+  migrator-cbp:
+    container_name: migrator-cbp
+    depends_on: 
+      - db-cbp
+    env_file:
+      - migrator.env
+    build:
+      context: ../migrations
+      dockerfile: Dockerfile
+    networks:
+      - postgres-cbp
+
+networks:
+  postgres-cbp:
+    name: postgres-cbp
