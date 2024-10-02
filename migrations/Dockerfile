@@ -13,4 +13,3 @@ ENTRYPOINT ["/migrations/entrypoint.sh"]
 ADD https://github.com/pressly/goose/releases/download/v3.16.0/goose_linux_x86_64 /bin/goose
 RUN chmod +x /bin/goose
 RUN chmod +x /migrations/entrypoint.sh
-RUN ls
